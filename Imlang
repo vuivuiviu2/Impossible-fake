@@ -1,0 +1,73 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/VoorPhale012/Fogroom/refs/heads/main/Wwwhyyyyil"))()
+local isEntityActive = true 
+
+local function SpawnInvisible()
+    local entity = spawner.Create({
+        Entity = { Name = "Invisible Entity", Asset = "rbxassetid://104261822446449", HeightOffset = 0 },
+        Lights = { Flicker = { Enabled = false, Duration = 10 }, Shatter = true, Repair = false },
+        Earthquake = { Enabled = false },
+        CameraShake = { Enabled = false, Range = 100, Values = {0.1, 0.1, 0.1, 0.1} },
+        Movement = { Speed = 5000, Delay = 0, Reversed = true },
+        Rebounding = { Enabled = false, Type = "Ambush", Min = 1, Max = 1, Delay = 2 },
+        Damage = { Enabled = false, Range = 40, Amount = 1 },
+        Crucifixion = { Enabled = false, Range = 40, Resist = false, Break = true },
+        Death = { Type = "Guiding", Hints = {"Guestly", "Hints", "Go", "Here"}, Cause = "" }
+    })
+
+    entity:SetCallback("OnSpawned", function()
+        task.wait(0.1)
+        local model = Workspace:FindFirstChild("Invisible Entity")
+        if not model then return end
+        for _, v in ipairs(model:GetDescendants()) do
+            if v:IsA("Light") or v:IsA("ParticleEmitter") then v:Destroy() end
+            if v:IsA("BasePart") then v.Transparency = 1 v.CanCollide = false end
+        end
+    end)
+    entity:Run()
+end
+
+local exile = game:GetObjects("rbxassetid://89609524296396")[1]
+exile.Name = "Imlang"
+exile.Parent = Workspace
+exile:ScaleTo(0.75)
+
+local currentRooms = Workspace.CurrentRooms
+local rooms = currentRooms:GetChildren()
+local targetRoom = rooms[#rooms - 1]
+
+if targetRoom and targetRoom:FindFirstChild("Parts") and targetRoom.Parts:FindFirstChild("Floor") then
+    exile:PivotTo(targetRoom.Parts.Floor.CFrame * CFrame.new(0, 10, 0))
+    SpawnInvisible()
+
+    local connection
+    connection = currentRooms.ChildAdded:Connect(function()
+        isEntityActive = false 
+        if exile then exile:Destroy() end
+        connection:Disconnect()
+    end)
+
+    task.wait(2)
+    
+    task.spawn(function()
+        while isEntityActive do
+            for _, player in ipairs(Players:GetPlayers()) do
+                local char = player.Character
+                if char then
+                    local humanoid = char:FindFirstChild("Humanoid")
+                    if humanoid and humanoid.Health > 0 then
+                        local isCrouching = char:GetAttribute("Crouching") == true
+                        local isSitting = humanoid.Sit == true
+                        
+                        if not isCrouching and not isSitting then
+                            humanoid.Health = math.max(0, humanoid.Health - 5)
+                        end
+                    end
+                end
+            end
+            task.wait(0.5)
+        end
+    end)
+end
